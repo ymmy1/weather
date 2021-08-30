@@ -31,6 +31,24 @@
       <div class="weather-data" v-if="weather.main === undefined">
         <p class="date">Please select another location</p>
       </div>
+
+      <table class="forecast">
+        <tr v-for="line in weatherForecast" :key="line.date">
+          <th>{{ line.date }}</th>
+          <td v-for="item in line.items" :key="item.dt_txt">
+            <p>{{ item.dt_txt }}</p>
+            <img
+              v-bind:src="
+                'http://openweathermap.org/img/wn/' +
+                item.weather[0].icon +
+                '@2x.png'
+              "
+              v-bind:alt="weather.weather[0].main"
+            />
+            <p>{{ Math.round(item.main.temp) }}°C</p>
+          </td>
+        </tr>
+      </table>
     </main>
   </div>
 </template>
@@ -44,6 +62,7 @@ export default {
       url_base: "https://api.openweathermap.org/data/2.5/",
       query: "",
       weather: {},
+      weatherForecast: {},
     };
   },
   created() {
@@ -54,6 +73,13 @@ export default {
         return res.json();
       })
       .then(this.setResult);
+    fetch(
+      `${this.url_base}forecast?q=seattle&units=metric&APPID=${this.api_key}`
+    )
+      .then((res) => {
+        return res.json();
+      })
+      .then(this.setForecastResult);
   },
   methods: {
     fetchWeather(e) {
@@ -65,11 +91,56 @@ export default {
             return res.json();
           })
           .then(this.setResult);
+        fetch(
+          `${this.url_base}forecast?q=${this.query}&units=metric&APPID=${this.api_key}`
+        )
+          .then((res) => {
+            return res.json();
+          })
+          .then(this.setForecastResult);
       }
     },
     setResult(result) {
       this.weather = result;
-      console.log(result);
+    },
+    setForecastResult(result) {
+      let newList = [{}];
+      let index = 0;
+      let months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      for (let i = 0; i < result.list.length; i++) {
+        let dateTime = result.list[i].dt_txt.split(" ");
+        let convertDate = dateTime[0].slice(6, 11).split("-");
+        let date = months[convertDate[0] - 1] + " " + convertDate[1];
+        let time = dateTime[1];
+        if (newList[index].date !== date) {
+          index++;
+          result.list[i].dt_txt = time.slice(0, 5);
+          let item = {
+            date: date,
+            items: [result.list[i]],
+          };
+          newList.push(item);
+        } else {
+          result.list[i].dt_txt = time.slice(0, 5);
+          newList[index].items.push(result.list[i]);
+        }
+      }
+      newList.shift();
+      console.log(newList);
+      this.weatherForecast = newList;
     },
     dateBuilder() {
       let d = new Date();
@@ -242,5 +313,49 @@ main {
   font-style: italic;
   text-shadow: 3px 6px rgba(0, 0, 0, 0.25);
   text-transform: capitalize;
+}
+table {
+  width: 100%;
+
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  margin: 30px 0;
+
+  box-shadow: 3px 6px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  overflow: hidden;
+
+  table-layout: fixed;
+}
+table th {
+  white-space: nowrap;
+}
+table tr {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
+
+  overflow-x: scroll;
+
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+table tr::-webkit-scrollbar {
+  display: none;
+}
+table tr:nth-child(odd) {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: #313131;
+}
+table tr td {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+table tr td img {
+  width: 45px;
 }
 </style>
