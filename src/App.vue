@@ -1,5 +1,8 @@
 <template>
-  <div id="app" v-bind:class="weather.weather[0].main">
+  <div
+    id="app"
+    v-bind:class="weather.weather ? weather.weather[0].main : 'Clouds'"
+  >
     <main>
       <input
         type="text"
@@ -32,7 +35,7 @@
         <p class="date">Please select another location</p>
       </div>
 
-      <table class="forecast">
+      <table class="forecast" v-if="weather.main !== undefined">
         <tr v-for="line in weatherForecast" :key="line.date">
           <th>{{ line.date }}</th>
           <td v-for="item in line.items" :key="item.dt_txt">
@@ -73,13 +76,13 @@ export default {
         return res.json();
       })
       .then(this.setResult);
-    fetch(
-      `${this.url_base}forecast?q=seattle&units=metric&APPID=${this.api_key}`
-    )
-      .then((res) => {
-        return res.json();
-      })
-      .then(this.setForecastResult);
+    // fetch(
+    //   `${this.url_base}forecast?q=seattle&units=metric&APPID=${this.api_key}`
+    // )
+    //   .then((res) => {
+    //     return res.json();
+    //   })
+    //   .then(this.setForecastResult);
   },
   methods: {
     fetchWeather(e) {
@@ -91,6 +94,15 @@ export default {
             return res.json();
           })
           .then(this.setResult);
+      }
+    },
+    setResult(result) {
+      this.weather = result;
+
+      if (this.query == "") {
+        this.query = "Seattle";
+      }
+      if (this.weather.main !== undefined) {
         fetch(
           `${this.url_base}forecast?q=${this.query}&units=metric&APPID=${this.api_key}`
         )
@@ -99,9 +111,6 @@ export default {
           })
           .then(this.setForecastResult);
       }
-    },
-    setResult(result) {
-      this.weather = result;
     },
     setForecastResult(result) {
       let newList = [{}];
