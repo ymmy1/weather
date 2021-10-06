@@ -131,7 +131,7 @@ export default {
       ];
       for (let i = 0; i < result.list.length; i++) {
         let dateTime = result.list[i].dt_txt.split(" ");
-        let convertDate = dateTime[0].slice(6, 11).split("-");
+        let convertDate = dateTime[0].slice(5, 11).split("-");
         let date = months[convertDate[0] - 1] + " " + convertDate[1];
         let time = dateTime[1];
         if (newList[index].date !== date) {
@@ -148,7 +148,6 @@ export default {
         }
       }
       newList.shift();
-      console.log(newList);
       this.weatherForecast = newList;
     },
     dateBuilder() {
